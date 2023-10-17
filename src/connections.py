@@ -2,8 +2,16 @@ from selenium.webdriver.remote.webdriver import WebDriver
 from selenium.webdriver.remote.webelement import WebElement
 from selenium.webdriver.common.by import By
 import time
+from typing import List
+from enum import Enum
 
 URL_PREFIX = "https://connections.swellgarfo.com/nyt/"
+
+SECONDS_TO_WAIT_AFTER_CLICK = 0.3
+
+
+def waitAfterClick():
+    time.sleep(SECONDS_TO_WAIT_AFTER_CLICK)
 
 
 def getGameUrl(game_id: int):
@@ -25,6 +33,18 @@ def getButtonWithText(browser: WebDriver, text: str):
     return text_div.find_element(By.XPATH, "ancestor::button")
 
 
+def getDivWithClassSubstring(browser: WebDriver, class_substring: str):
+    return browser.find_element(
+        By.XPATH, f"//div[contains(@class, '{class_substring}')]"
+    )
+
+
+class AttemptResult(Enum):
+    SUCCESS = 1
+    FAILURE = 2
+    ONE_AWAY = 3
+
+
 class Connections:
     def __init__(self, browser: WebDriver, game_id: int):
         self.browser = browser
@@ -41,6 +61,7 @@ class Connections:
     def loadData(self):
         self.getValidWords()
         self.loadButtons()
+        self.loadToastify()
 
     def getValidWords(self):
         if hasattr(self, "valid_words"):
@@ -60,13 +81,52 @@ class Connections:
         self.submit_button = getButtonWithText(self.browser, "Submit")
         self.clear_button = getButtonWithText(self.browser, "Clear")
 
+    def loadToastify(self):
+        self.toastify = getDivWithClassSubstring(self.browser, "Toastify")
+
+    def isOneAwayMessageVisible(self):
+        # return if toastify has children
+        return len(self.toastify.find_elements(By.XPATH, "./*")) > 0
+
+    def getNumberOfCorrectGroups(self):
+        correct_div = getDivWithClassSubstring(
+            self.browser, "HomePage_correct-answers-wrap"
+        )
+        # return number of children of correct_div
+        return len(correct_div.find_elements(By.XPATH, "./*"))
+
     def clickWord(self, word: str):
         print("Clicking word: ", word)
         button = self.valid_words_to_elements[word]
         button.click()
+        waitAfterClick()
 
     def submit(self):
         self.submit_button.click()
+        waitAfterClick()
 
     def clear(self):
         self.clear_button.click()
+        waitAfterClick()
+
+    def attemptGroup(self, words: List[str]) -> AttemptResult:
+        print("Current number of correct groups: ", self.getNumberOfCorrectGroups())
+        print("Attempting group: ", words)
+        current_groups = self.getNumberOfCorrectGroups()
+        self.clear()
+        for word in words:
+            self.clickWord(word)
+        self.submit()
+        if self.isOneAwayMessageVisible():
+            print("One away!")
+            return AttemptResult.ONE_AWAY
+
+        new_groups = self.getNumberOfCorrectGroups()
+        new_group_formed = new_groups > current_groups
+
+        if new_group_formed:
+            print("New group formed!")
+            return AttemptResult.SUCCESS
+        else:
+            print("No new group formed.")
+            return AttemptResult.FAILURE
