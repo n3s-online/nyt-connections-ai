@@ -45,6 +45,15 @@ class AttemptResult(Enum):
     ONE_AWAY = 3
 
 
+ALLOWED_MISTAKES = 3
+
+
+class GameState(Enum):
+    IN_PROGRESS = 1
+    WON = 2
+    LOST = 3
+
+
 class Connections:
     def __init__(self, browser: WebDriver, game_id: int):
         self.browser = browser
@@ -59,23 +68,32 @@ class Connections:
         self.loadData()
 
     def loadData(self):
-        self.getValidWords()
+        self.attempts = 0
+        self.loadRemainingWords()
         self.loadButtons()
         self.loadToastify()
 
-    def getValidWords(self):
-        if hasattr(self, "valid_words"):
-            return self.valid_words
+    def getGameState(self) -> GameState:
+        correct_groups = self.getNumberOfCorrectGroups()
+        mistakes = self.attempts - correct_groups
+        if mistakes > ALLOWED_MISTAKES:
+            return GameState.LOST
+        elif correct_groups == 4:
+            return GameState.WON
+        return GameState.IN_PROGRESS
+
+    def loadRemainingWords(self):
         buttons = self.browser.find_elements(By.CSS_SELECTOR, "button")
 
-        self.valid_words = []
-        self.valid_words_to_elements = {}
+        self.remaining_words = []
+        self.remaining_words_to_elements = {}
         for button in buttons:
             if not isButtonWordForGame(button):
                 continue
-            self.valid_words.append(button.text)
-            self.valid_words_to_elements[button.text] = button
-        return self.valid_words
+            self.remaining_words.append(button.text)
+            self.remaining_words_to_elements[button.text] = button
+        print("Loaded words: ", self.remaining_words)
+        return self.remaining_words
 
     def loadButtons(self):
         self.submit_button = getButtonWithText(self.browser, "Submit")
@@ -97,7 +115,7 @@ class Connections:
 
     def clickWord(self, word: str):
         print("Clicking word: ", word)
-        button = self.valid_words_to_elements[word]
+        button = self.remaining_words_to_elements[word]
         button.click()
         waitAfterClick()
 
@@ -117,6 +135,8 @@ class Connections:
         for word in words:
             self.clickWord(word)
         self.submit()
+        time.sleep(1)
+        self.attempts += 1
         if self.isOneAwayMessageVisible():
             print("One away!")
             return AttemptResult.ONE_AWAY
@@ -126,6 +146,7 @@ class Connections:
 
         if new_group_formed:
             print("New group formed!")
+            self.loadRemainingWords()
             return AttemptResult.SUCCESS
         else:
             print("No new group formed.")

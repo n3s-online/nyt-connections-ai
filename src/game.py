@@ -8,7 +8,12 @@ from connections import Connections
 class Game:
     def __init__(self, connections: Connections):
         self.connections = connections
-        valid_words = self.connections.getValidWords()
-        print(valid_words)
-        # self.connections.attemptGroup(["BOOKMARK", "HISTORY", "TAB", "WINDOW"])
-        self.connections.attemptGroup(["BOOKMARK", "HISTORY", "TAB", "TIE"])
+        print(self.connections.getGameState())
+        self.connections.attemptGroup(["BOOKMARK", "HISTORY", "TAB", "WINDOW"])
+        print(self.connections.getGameState())
+        self.connections.attemptGroup(["BOND", "LINK", "RELATION", "TIE"])
+        print(self.connections.getGameState())
+        self.connections.attemptGroup(["CUFF", "BUTTON", "POCKET", "COLLAR"])
+        print(self.connections.getGameState())
+        self.connections.attemptGroup(["DOZEN", "JOKE", "MARTINI", "LAUNDRY"])
+        print(self.connections.getGameState())
