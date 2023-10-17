@@ -1,7 +1,12 @@
-from selenium.webdriver.remote.webdriver import WebDriver
+from selenium.webdriver.common.by import By
+from connections import Connections
 
 
 class Game:
-    def __init__(self, browser: WebDriver, game_id: int):
-        url = f"https://connections.swellgarfo.com/nyt/{game_id}"
-        browser.get(url)
+    def __init__(self, connections: Connections):
+        self.connections = connections
+        valid_words = self.connections.getValidWords()
+        print(valid_words)
+        for word in ["BOOKMARK", "HISTORY", "TAB", "WINDOW"]:
+            self.connections.clickWord(word)
+        self.connections.submit()

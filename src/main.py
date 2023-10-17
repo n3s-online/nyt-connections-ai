@@ -4,20 +4,19 @@
 
 import time
 from selenium import webdriver
-from selenium.webdriver.common.by import By
 
+from connections import Connections
 from game import Game
+
 
 # Choose Chrome Browser
 browser = webdriver.Chrome()
 
-# Create a new game
-game = Game(browser, 100)
+connections = Connections(browser, 100)
 
-# Extract description from page and print
-# description = browser.find_element(By.NAME, "description").get_attribute("content")
-# print(f"{description}")
+# Create a new game
+game = Game(connections)
 
 # Wait for 10 seconds
-time.sleep(10)
+time.sleep(5)
 browser.quit()
