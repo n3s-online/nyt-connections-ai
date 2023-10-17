@@ -104,7 +104,13 @@ class Connections:
 
     def isOneAwayMessageVisible(self):
         # return if toastify has children
-        return len(self.toastify.find_elements(By.XPATH, "./*")) > 0
+        is_visible = len(self.toastify.find_elements(By.XPATH, "./*")) > 0
+        # if its visible, wait for it to disappear
+        if not is_visible:
+            return False
+        while len(self.toastify.find_elements(By.XPATH, "./*")) > 0:
+            time.sleep(0.5)
+        return True
 
     def getNumberOfCorrectGroups(self):
         correct_div = getDivWithClassSubstring(
