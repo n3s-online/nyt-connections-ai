@@ -7,3 +7,7 @@
 2. Run `source venv/bin/activate`
 3. Run `pip install -r requirements.txt`
    - Use `pip freeze > requirements.txt` to update requirements.txt after you install new dependencies
+
+# TODOs
+
+- Try randomizing the order of the input words each attempt as it seems the AI is generating groups based on order of input words
