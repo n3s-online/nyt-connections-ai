@@ -34,7 +34,7 @@ The user may also give information about previous attempted groups.
 STARTING_MESSAGE = getSystemMessage(SYSTEM_MESSAGE_BASE)
 
 CONVERT_TO_JSON_MESSAGE_BASE = """
-Convert your response to a JSON string which is an array where each element in the array has a words array, and a theme array.
+Convert your response to a JSON string which is an array where each element in the array has a words array, and a theme array. Every group must have 4 words.
 If I were to type this in typescript it'd be `{words: string[]; theme: string;}[]`.
 """
 CONVERT_TO_JSON_MESSAGE = getSystemMessage(CONVERT_TO_JSON_MESSAGE_BASE)
