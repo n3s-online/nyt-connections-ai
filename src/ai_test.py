@@ -48,4 +48,3 @@ game_state.addAttempt(Attempt(["CUFF", "TIE", "COLLAR", "LINK"], AttemptResult.F
 ai = AI(OPENAI_API_KEY)
 
 ai_responses = ai.getWords(game_state)
-print("Guess to make: " + str(ai_responses[0]))

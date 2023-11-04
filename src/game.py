@@ -1,6 +1,6 @@
-from selenium.webdriver.common.by import By
 from connections import Connections
-from game_state import GameState
+from game_state import GameState, Attempt
+from typing import List
 
 
 class Game:
@@ -9,13 +9,10 @@ class Game:
         words = connections.loadRemainingWords()
         self.game_state = GameState()
         self.game_state.setRemainingWords(words)
-        self.playTurn(["BOOKMARK", "HISTORY", "TAB", "WINDOW"])
-        self.playTurn(["BOND", "LINK", "RELATION", "TIE"])
-        self.playTurn(["CUFF", "BUTTON", "POCKET", "COLLAR"])
-        self.playTurn(["DOZEN", "JOKE", "MARTINI", "LAUNDRY"])
 
-    def playTurn(self, words: list):
-        self.connections.attemptGroup(words)
+    def playTurn(self, words: List[str]):
+        attempt_result = self.connections.attemptGroup(words)
+        attempt = Attempt(words, attempt_result)
+        self.game_state.addAttempt(attempt)
         words = self.connections.loadRemainingWords()
         self.game_state.setRemainingWords(words)
-        print(self.connections.getGameState())

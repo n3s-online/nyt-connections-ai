@@ -73,7 +73,6 @@ def getUserWordMessage(words: List[str], attempts: List[Attempt]) -> dict:
 
 
 def getResponse(messages: List[dict]) -> str:
-    print("Sending messages: ", messages)
     response = openai.ChatCompletion.create(
         model=MODEL_TO_USE,
         messages=messages,
@@ -89,7 +88,7 @@ def getResponse(messages: List[dict]) -> str:
 
 class AIResponse:
     def __init__(self, obj):
-        self.words: List[str] = obj["words"]
+        self.words: List[str] = [word.upper() for word in obj["words"]]
         self.theme: str = obj["theme"]
 
     def __str__(self):
@@ -107,10 +106,8 @@ class AI:
         )
         messages = [STARTING_MESSAGE, words_as_message]
         initial_response = getResponse(messages)
-        print("Got initial response: ", initial_response)
         messages.append(getAssistantMessage(initial_response))
         messages.append(CONVERT_TO_JSON_MESSAGE)
         response = getResponse(messages)
-        print("Got response: ", response)
         json_response = json.loads(response)
         return [AIResponse(obj) for obj in json_response]

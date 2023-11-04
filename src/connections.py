@@ -92,7 +92,6 @@ class Connections:
                 continue
             self.remaining_words.append(button.text)
             self.remaining_words_to_elements[button.text] = button
-        print("Loaded words: ", self.remaining_words)
         return self.remaining_words
 
     def loadButtons(self):
@@ -120,7 +119,6 @@ class Connections:
         return len(correct_div.find_elements(By.XPATH, "./*"))
 
     def clickWord(self, word: str):
-        print("Clicking word: ", word)
         button = self.remaining_words_to_elements[word]
         button.click()
         waitAfterClick()
@@ -134,8 +132,6 @@ class Connections:
         waitAfterClick()
 
     def attemptGroup(self, words: List[str]) -> AttemptResult:
-        print("Current number of correct groups: ", self.getNumberOfCorrectGroups())
-        print("Attempting group: ", words)
         current_groups = self.getNumberOfCorrectGroups()
         self.clear()
         for word in words:
@@ -144,16 +140,13 @@ class Connections:
         time.sleep(1)
         self.attempts += 1
         if self.isOneAwayMessageVisible():
-            print("One away!")
             return AttemptResult.ONE_AWAY
 
         new_groups = self.getNumberOfCorrectGroups()
         new_group_formed = new_groups > current_groups
 
         if new_group_formed:
-            print("New group formed!")
             self.loadRemainingWords()
             return AttemptResult.SUCCESS
         else:
-            print("No new group formed.")
             return AttemptResult.FAILURE
