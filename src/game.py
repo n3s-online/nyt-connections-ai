@@ -1,38 +1,21 @@
 from connections import Connections
-from game_state import GameState, Attempt
-from ai import AI
+from game_state import GameState, AttemptResult, AttemptResultStatus
 from typing import List
 
 
 class Game:
-    def __init__(self, connections: Connections, ai: AI):
+    def __init__(self, connections: Connections):
         self.connections = connections
-        words = connections.loadRemainingWords()
-        self.game_state = GameState()
-        self.game_state.setRemainingWords(words)
-        self.ai = ai
+        initial_words = self.connections.get_remaining_words()
+        self.game_state = GameState(initial_words)
 
-    def playTurn(self, words: List[str]):
-        attempt_result = self.connections.attemptGroup(words)
-        attempt = Attempt(words, attempt_result)
-        self.game_state.addAttempt(attempt)
-        words = self.connections.loadRemainingWords()
-        self.game_state.setRemainingWords(words)
+    def attempt_group(self, words: List[str]) -> AttemptResult:
+        result = self.connections.attempt_group(words)
+        attempt_result = self.game_state.record_attempt(words, result)
+        if attempt_result.result == AttemptResultStatus.SUCCESS:
+            remaining_words = self.connections.get_remaining_words()
+            self.game_state.update_remaining_words(remaining_words)
+        return attempt_result
 
-    def tick(self):
-        print("=====================================")
-        print("Remaining words")
-        print(self.game_state.remaining_words)
-        ai_responses = self.ai.getWords(self.game_state)
-        print("AI responses")
-        print(", ".join(map(str, ai_responses)))
-        ai_response = ai_responses[0]
-        print("Playing")
-        print(ai_response)
-        self.playTurn(ai_response.words)
-
-    def loop(self):
-        while self.connections.isInProgress():
-            self.tick()
-        print("Final game result: " + str(self.connections.getGameState()))
-        print("Number of total guesses: " + str(self.connections.attempts))
+    def get_game_state(self) -> GameState:
+        return self.game_state

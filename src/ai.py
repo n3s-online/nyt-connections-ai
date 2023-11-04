@@ -1,8 +1,9 @@
-from game_state import GameState, Attempt, AttemptResult
+from game_state import GameState
 import openai
 import json
 from typing import List
 
+# MODEL_TO_USE = "gpt-3.5-turbo"
 MODEL_TO_USE = "gpt-4"
 
 
@@ -38,38 +39,10 @@ If I were to type this in typescript it'd be `{words: string[]; theme: string;}[
 """
 CONVERT_TO_JSON_MESSAGE = getSystemMessage(CONVERT_TO_JSON_MESSAGE_BASE)
 
-ATTEMPT_RESULTS_TO_ADD_TO_MESSAGE = [AttemptResult.ONE_AWAY, AttemptResult.FAILURE]
 
-
-def isAttemptRelevant(words: List[str], attempt: Attempt) -> bool:
-    if attempt.result not in ATTEMPT_RESULTS_TO_ADD_TO_MESSAGE:
-        return False
-    all_attempt_words_are_in_words = all(
-        [attempt_word in words for attempt_word in attempt.words]
-    )
-    return all_attempt_words_are_in_words
-
-
-def convertAttemptToMessage(attempt: Attempt) -> str:
-    attempt_as_json_string = json.dumps(attempt.words)
-    if attempt.result == AttemptResult.ONE_AWAY:
-        return f"In a previous attempt of {attempt_as_json_string}, 3 of these words belong to the same group but one of them does not."
-    elif attempt.result == AttemptResult.FAILURE:
-        return f"In a previous attempt of {attempt_as_json_string}, these 4 words do not belong to the same group."
-    raise Exception(f"Unexpected attempt result: {attempt.result}")
-
-
-def getUserWordMessage(words: List[str], attempts: List[Attempt]) -> dict:
+def getUserWordMessage(words: List[str]) -> dict:
     words_as_json_string = json.dumps(words)
-    attempts_for_message = list(
-        filter(
-            lambda attempt: isAttemptRelevant(words, attempt),
-            attempts,
-        )
-    )
-    attempts_as_messages = list(map(convertAttemptToMessage, attempts_for_message))
-    message_string = "\n".join([words_as_json_string] + attempts_as_messages)
-    return getUserMessage(message_string)
+    return getUserMessage(words_as_json_string)
 
 
 def getResponse(messages: List[dict]) -> str:
@@ -94,16 +67,17 @@ class AIResponse:
     def __str__(self):
         return f"{self.theme}: {self.words}"
 
+    def get_words(self) -> List[str]:
+        return self.words
+
 
 class AI:
     def __init__(self, open_api_key):
         self.open_api_key = open_api_key
         openai.api_key = open_api_key
 
-    def getWords(self, state: GameState) -> List[AIResponse]:
-        words_as_message = getUserWordMessage(
-            state.getRemainingWords(), state.getAttemptHistory()
-        )
+    def get_words(self, state: GameState) -> List[AIResponse]:
+        words_as_message = getUserWordMessage(state.get_remaining_words())
         messages = [STARTING_MESSAGE, words_as_message]
         initial_response = getResponse(messages)
         messages.append(getAssistantMessage(initial_response))
