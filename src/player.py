@@ -44,5 +44,4 @@ class Player:
     def play_game(self):
         while not self.game.get_game_state().is_game_over():
             self.play_turn()
-        print("Game over!")
-        print(self.game.get_game_state().get_game_status())
+        print(self.game.get_game_state().get_game_over_message())

@@ -59,6 +59,13 @@ class GameState:
     def is_game_over(self) -> bool:
         return self.get_game_status() != GameStatus.IN_PROGRESS
 
+    def get_game_over_message(self) -> str:
+        game_status = self.get_game_status()
+        number_of_attempts = self.__get_number_of_attempts()
+        mistakes = self.__number_of_mistakes()
+        correct_groups = self.__get_number_of_correct_groups()
+        return f"Game over! {game_status.name} in {number_of_attempts} attempts with {mistakes} mistakes and {correct_groups} correct groups."
+
     def get_turn_number(self) -> int:
         return len(self.group_attempt_history) + 1
 
@@ -93,3 +100,6 @@ class GameState:
 
     def __get_number_of_attempts(self) -> int:
         return len(self.group_attempt_history)
+
+    def __number_of_mistakes(self) -> int:
+        return self.__get_number_of_attempts() - self.__get_number_of_correct_groups()

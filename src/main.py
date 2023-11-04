@@ -15,7 +15,7 @@ OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 
 # Choose Chrome Browser
 browser = webdriver.Chrome()
-connections = Connections(browser, 100)
+connections = Connections(browser, 101)
 
 # Create a new player
 player = Player(connections, OPENAI_API_KEY)
