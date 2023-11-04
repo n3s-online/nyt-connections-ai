@@ -2,3 +2,4 @@ venv
 setup
 **/__pycache__
 .env
+logs

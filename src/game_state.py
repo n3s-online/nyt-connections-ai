@@ -79,6 +79,32 @@ class GameState:
                 return attempt
         return None
 
+    def get_most_recent_attempt_where_all_words_still_remain(
+        self,
+    ) -> AttemptResult:
+        attempt = self.__get_most_recent_attempt_where_all_words_still_remain(
+            AttemptResultStatus.ONE_AWAY
+        )
+        if attempt != None:
+            return attempt
+        return self.__get_most_recent_attempt_where_all_words_still_remain(
+            AttemptResultStatus.FAILURE
+        )
+
+    def __get_most_recent_attempt_where_all_words_still_remain(
+        self, valid_status: AttemptResultStatus
+    ) -> AttemptResult:
+        relevant_attempts = list(
+            filter(
+                lambda attempt: attempt.result == valid_status
+                and all(word in self.remaining_words for word in attempt.words),
+                self.group_attempt_history,
+            )
+        )
+        if len(relevant_attempts) == 0:
+            return None
+        return relevant_attempts[-1]
+
     # TODO - change to helper function instead of inside of class (doesnt need access to state)
     def __does_guess_match_attempt(
         self, group: List[str], attempt: AttemptResult

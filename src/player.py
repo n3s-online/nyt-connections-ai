@@ -25,7 +25,13 @@ class Player:
             return remaining_words
         print("==AI guess==")
         ai = AI(self.open_api_key)
-        ai_guesses = ai.get_initial_guesses(remaining_words)
+        ai_guesses: List[AIResponse] = []
+        relevant_attempt = (
+            self.game.get_game_state().get_most_recent_attempt_where_all_words_still_remain()
+        )
+        if relevant_attempt != None:
+            print(f"Using relevant attempt for context: {relevant_attempt}")
+        ai_guesses = ai.get_initial_guesses(remaining_words, relevant_attempt)
         for guess in ai_guesses:
             print(guess)
         ai_guess = ai_guesses[0]
