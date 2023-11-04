@@ -17,5 +17,10 @@ class Game:
             self.game_state.update_remaining_words(remaining_words)
         return attempt_result
 
+    def shuffle(self):
+        self.connections.shuffle()
+        remaining_words = self.connections.get_remaining_words()
+        self.game_state.update_remaining_words(remaining_words)
+
     def get_game_state(self) -> GameState:
         return self.game_state

@@ -73,6 +73,11 @@ class GameState:
     def get_turn_number(self) -> int:
         return len(self.group_attempt_history) + 1
 
+    def was_previous_attempt_failure(self) -> int:
+        if len(self.group_attempt_history) == 0:
+            return False
+        return self.group_attempt_history[-1].result == AttemptResultStatus.FAILURE
+
     def get_previous_attempt_for_words(self, words: List[str]) -> AttemptResult:
         for attempt in self.group_attempt_history:
             if self.__does_guess_match_attempt(words, attempt):

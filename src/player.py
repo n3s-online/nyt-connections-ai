@@ -12,7 +12,11 @@ class Player:
 
     def play_turn(self):
         print(f"====Player turn {self.game.get_game_state().get_turn_number()}====")
+        if self.game.get_game_state().was_previous_attempt_failure():
+            print("==Shuffling==")
+            self.game.shuffle()
         print(self.game.get_game_state())
+
         guess = self.__get_guess()
         print("==Connections Result==")
         result = self.game.attempt_group(guess)
