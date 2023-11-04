@@ -22,20 +22,9 @@ browser = webdriver.Chrome()
 connections = Connections(browser, 100)
 
 # Create a new game
-game = Game(connections)
+game = Game(connections, ai)
 
-
-def gameLoop():
-    ai_responses = ai.getWords(game.game_state)
-    ai_response = ai_responses[0]
-    game.playTurn(ai_response.words)
-
-
-while connections.getGameState() == GameState.IN_PROGRESS:
-    gameLoop()
-
-print("Final game result: " + str(connections.getGameState()))
-print("Number of total guesses: " + str(connections.attempts))
+game.loop()
 
 # Wait for 10 seconds
 time.sleep(5)

@@ -82,6 +82,9 @@ class Connections:
             return GameState.WON
         return GameState.IN_PROGRESS
 
+    def isInProgress(self) -> bool:
+        return self.getGameState() == GameState.IN_PROGRESS
+
     def loadRemainingWords(self) -> List[str]:
         buttons = self.browser.find_elements(By.CSS_SELECTOR, "button")
 
