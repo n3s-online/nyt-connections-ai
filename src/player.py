@@ -1,7 +1,7 @@
 from connections import Connections
 from game_state import GameState, AttemptResult
 from game import Game
-from ai import AI
+from ai import AI, AIResponse
 from typing import List
 
 
@@ -25,7 +25,17 @@ class Player:
             return remaining_words
         print("==AI guess==")
         ai = AI(self.open_api_key)
-        ai_guesses = ai.get_words(self.game.get_game_state())
+        ai_guesses = ai.get_initial_guesses(remaining_words)
+        for guess in ai_guesses:
+            print(guess)
+        ai_guess = ai_guesses[0]
+        previous_attempt = self.game.get_game_state().get_previous_attempt_for_words(
+            ai_guess.get_words()
+        )
+        if previous_attempt == None:
+            return ai_guess.get_words()
+        print("==AI guess 2 (prev already attempted)==")
+        ai_guesses = ai.get_modified_guess(remaining_words, previous_attempt)
         for guess in ai_guesses:
             print(guess)
         ai_guess = ai_guesses[0]

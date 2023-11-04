@@ -62,9 +62,23 @@ class GameState:
     def get_turn_number(self) -> int:
         return len(self.group_attempt_history) + 1
 
+    def get_previous_attempt_for_words(self, words: List[str]) -> AttemptResult:
+        for attempt in self.group_attempt_history:
+            if self.__does_guess_match_attempt(words, attempt):
+                return attempt
+        return None
+
+    # TODO - change to helper function instead of inside of class (doesnt need access to state)
+    def __does_guess_match_attempt(
+        self, group: List[str], attempt: AttemptResult
+    ) -> bool:
+        if all(word in attempt.words for word in group):
+            return True
+        return False
+
     def __str__(self) -> str:
         attempt_history_string = (
-            "Attempts:\n" if len(self.group_attempt_history) > 0 else ""
+            "\nAttempts:" if len(self.group_attempt_history) > 0 else ""
         )
         for i, attempt in enumerate(self.group_attempt_history):
             attempt_history_string += f"\n\t{i+1}. {attempt.pretty_str()}"

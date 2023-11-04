@@ -1,4 +1,4 @@
-from game_state import GameState
+from game_state import AttemptResult, AttemptResultStatus
 import openai
 import json
 from typing import List
@@ -45,6 +45,18 @@ def getUserWordMessage(words: List[str]) -> dict:
     return getUserMessage(words_as_json_string)
 
 
+def getCorrectionAttemptMessage(attempt: AttemptResult) -> dict:
+    words = attempt.words
+    message = ""
+    if attempt.result == AttemptResultStatus.SUCCESS:
+        raise Exception("Attempt was successful, no need to correct")
+    elif attempt.result == AttemptResultStatus.FAILURE:
+        message = f"Correction: {str(words)} is not a valid grouping."
+    elif attempt.result == AttemptResultStatus.ONE_AWAY:
+        message = f"Correction: {str(words)} is not a valid grouping. 3 of these 4 words were in in the same group, but 1 did not belong."
+    return getUserMessage(message)
+
+
 def getResponse(messages: List[dict]) -> str:
     response = openai.ChatCompletion.create(
         model=MODEL_TO_USE,
@@ -76,12 +88,31 @@ class AI:
         self.open_api_key = open_api_key
         openai.api_key = open_api_key
 
-    def get_words(self, state: GameState) -> List[AIResponse]:
-        words_as_message = getUserWordMessage(state.get_remaining_words())
-        messages = [STARTING_MESSAGE, words_as_message]
-        initial_response = getResponse(messages)
-        messages.append(getAssistantMessage(initial_response))
-        messages.append(CONVERT_TO_JSON_MESSAGE)
-        response = getResponse(messages)
-        json_response = json.loads(response)
+    # messages:
+    # 1. [System, Words]
+    # 2. [System, Words, Assistant, ConvertToJson]
+    # returns the 4 ai responses
+    def get_initial_guesses(self, words: List[str]) -> List[AIResponse]:
+        words_as_message = getUserWordMessage(words)
+        self.messages = [STARTING_MESSAGE, words_as_message]
+        assistant_response = getResponse(self.messages)
+        self.messages.append(getAssistantMessage(assistant_response))
+        messages_with_json = self.messages + [CONVERT_TO_JSON_MESSAGE]
+        assistant_json_response = getResponse(messages_with_json)
+        json_response = json.loads(assistant_json_response)
+        return [AIResponse(obj) for obj in json_response]
+
+    # messages:
+    # 1. [System, Words, Assistant, Correction]
+    # 2. [System, Words, Assistant, Correction, Assistant, ConvertToJson]
+    def get_modified_guess(
+        self, words: List[str], relevant_attempt: AttemptResult
+    ) -> List[AIResponse]:
+        correction_message = getCorrectionAttemptMessage(relevant_attempt)
+        self.messages.append(correction_message)
+        assistant_response = getResponse(self.messages)
+        self.messages.append(getAssistantMessage(assistant_response))
+        messages_with_json = self.messages + [CONVERT_TO_JSON_MESSAGE]
+        assistant_json_response = getResponse(messages_with_json)
+        json_response = json.loads(assistant_json_response)
         return [AIResponse(obj) for obj in json_response]
