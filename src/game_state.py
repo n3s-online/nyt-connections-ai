@@ -29,7 +29,8 @@ class AttemptResult:
 
 
 class GameState:
-    def __init__(self, initial_words: List[str]):
+    def __init__(self, game_id: int, initial_words: List[str]):
+        self.game_id = game_id
         self.remaining_words: List[str] = initial_words
         self.group_attempt_history: List[AttemptResult] = []
 
@@ -64,7 +65,10 @@ class GameState:
         number_of_attempts = self.__get_number_of_attempts()
         mistakes = self.__number_of_mistakes()
         correct_groups = self.__get_number_of_correct_groups()
-        return f"Game over! {game_status.name} in {number_of_attempts} attempts with {mistakes} mistakes and {correct_groups} correct groups."
+        game_summary = f"Game {self.game_id} over! {game_status.name} in {number_of_attempts} attempts with {mistakes} mistakes and {correct_groups} correct groups."
+        for i, attempt in enumerate(self.group_attempt_history):
+            game_summary += f"\n\t{i+1}. {attempt.pretty_str()}"
+        return game_summary
 
     def get_turn_number(self) -> int:
         return len(self.group_attempt_history) + 1

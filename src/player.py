@@ -6,8 +6,8 @@ from typing import List
 
 
 class Player:
-    def __init__(self, connections: Connections, open_api_key: str):
-        self.game = Game(connections)
+    def __init__(self, game_id: int, connections: Connections, open_api_key: str):
+        self.game = Game(game_id, connections)
         self.open_api_key = open_api_key
 
     def play_turn(self):

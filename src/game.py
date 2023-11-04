@@ -4,10 +4,10 @@ from typing import List
 
 
 class Game:
-    def __init__(self, connections: Connections):
+    def __init__(self, game_id: int, connections: Connections):
         self.connections = connections
         initial_words = self.connections.get_remaining_words()
-        self.game_state = GameState(initial_words)
+        self.game_state = GameState(game_id, initial_words)
 
     def attempt_group(self, words: List[str]) -> AttemptResult:
         result = self.connections.attempt_group(words)
