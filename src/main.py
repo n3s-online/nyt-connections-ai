@@ -12,14 +12,13 @@ from player import Player
 # Environment variables
 load_dotenv()
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
-ai = AI(OPENAI_API_KEY)
 
 # Choose Chrome Browser
 browser = webdriver.Chrome()
 connections = Connections(browser, 100)
 
 # Create a new player
-player = Player(connections, ai)
+player = Player(connections, OPENAI_API_KEY)
 player.play_game()
 
 # Wait for 10 seconds
