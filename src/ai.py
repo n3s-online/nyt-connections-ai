@@ -72,11 +72,17 @@ def getCorrectionAttemptMessage(attempt: AttemptResult) -> dict:
 
 def summarizeAttempt(attempt: AttemptResult) -> str:
     words = attempt.words
+    message = ""
     if attempt.result == AttemptResultStatus.FAILURE:
-        return f"You know that {str(words)} is not a valid grouping. Try to find a different category."
+        message = f"You know that {str(words)} is not a valid grouping. Try to find a different category."
     elif attempt.result == AttemptResultStatus.ONE_AWAY:
-        return f"You know that {str(words)} is not a valid grouping, 3 of the 4 words are in the same category. Replace the non relevant word with the correct word that fits in the category for this group."
-    raise Exception("Attempt was successful, no need to correct")
+        message = f"You know that {str(words)} is not a valid grouping, 3 of the 4 words are in the same category. Identify which other word from the input belongs in this category. Identify which word does not belong in this category. Swap the word that does not belong with the new word."
+    else:
+        raise Exception("Attempt was successful, no need to correct")
+    return (
+        message
+        + " As a reminder, the output must be groups of 4 words each, every word being unique and from the original input."
+    )
 
 
 def getResponse(messages: List[dict]) -> str:
