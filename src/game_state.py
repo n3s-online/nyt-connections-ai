@@ -124,7 +124,7 @@ class GameState:
         )
         for i, attempt in enumerate(self.group_attempt_history):
             attempt_history_string += f"\n\t{i+1}. {attempt.pretty_str()}"
-        return f"== Game State ==\nStatus: {self.get_game_status()}\nRemaining Words: {self.remaining_words}{attempt_history_string}"
+        return f"==Game State==\nStatus: {self.get_game_status()}\nRemaining Words: {self.remaining_words}{attempt_history_string}"
 
     def __get_number_of_correct_groups(self) -> int:
         correct_attempt_results = filter(
