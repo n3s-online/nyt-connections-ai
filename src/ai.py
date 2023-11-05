@@ -42,6 +42,10 @@ Examples of groupings:
 - Fire _: Ant, Drill, Island, Opal
 - Fruit Homophones: Lyme, Mellon, Pair, Plumb
 - Publications: Journal, Globe, Post, Asteroid
+- Synonyms For Falsehood: Fib, Fiction, Lie, Tale
+- Candy Pieces: Dot, Goober, Kiss, Whopper
+- Rappers Minus Numbers: Cent, Chainz, Pac, Savage
+- Touchscreen Gestures: Pinch, Spread, Swipe, Tap
 
 Each word can only be in one grouping, and each grouping must have 4 words exactly. The grouping cannot have a theme like "Random words", "General terms" or "Unrelated words", they must be connected in some way. 
 The user may also give information about previous attempted groups.
