@@ -2,7 +2,7 @@ import datetime
 from game_state import AttemptResult, AttemptResultStatus
 import openai
 import json
-from typing import List
+from typing import List, Set
 
 # MODEL_TO_USE = "gpt-3.5-turbo"
 MODEL_TO_USE = "gpt-4"
@@ -60,8 +60,8 @@ If I were to type this in typescript it'd be `{words: string[]; theme: string;}[
 CONVERT_TO_JSON_MESSAGE = getSystemMessage(CONVERT_TO_JSON_MESSAGE_BASE)
 
 
-def getUserWordMessage(words: List[str], relevant_attempt: AttemptResult) -> dict:
-    message = json.dumps(words)
+def getUserWordMessage(words: Set[str], relevant_attempt: AttemptResult) -> dict:
+    message = json.dumps(list(words))
     number_of_groups_to_provide = len(words) // 4
     message += f"\nProvide {number_of_groups_to_provide} groups of 4 words each."
     if relevant_attempt != None:
@@ -75,12 +75,12 @@ def getCorrectionAttemptMessage(attempt: AttemptResult) -> dict:
 
 
 def summarizeAttempt(attempt: AttemptResult) -> str:
-    words = attempt.words
+    words_string = str(list(attempt.words))
     message = ""
     if attempt.result == AttemptResultStatus.FAILURE:
-        message = f"You know that {str(words)} is not a valid grouping. Try to find a different category."
+        message = f"You know that {words_string} is not a valid grouping. Try to find a different category."
     elif attempt.result == AttemptResultStatus.ONE_AWAY:
-        message = f"You know that {str(words)} is not a valid grouping, 3 of the 4 words are in the same category. Identify which other word from the input belongs in this category. Identify which word does not belong in this category. Swap the word that does not belong with the new word."
+        message = f"You know that {words_string} is not a valid grouping, 3 of the 4 words are in the same category. Identify which other word from the input belongs in this category. Identify which word does not belong in this category. Swap the word that does not belong with the new word."
     else:
         raise Exception("Attempt was successful, no need to correct")
     return (
@@ -105,13 +105,13 @@ def getResponse(messages: List[dict]) -> str:
 
 class AIResponse:
     def __init__(self, obj):
-        self.words: List[str] = [word.upper() for word in obj["words"]]
+        self.words: Set[str] = {word.upper() for word in obj["words"]}
         self.theme: str = obj["theme"]
 
     def __str__(self):
         return f"{self.theme}: {self.words}"
 
-    def get_words(self) -> List[str]:
+    def get_words(self) -> Set[str]:
         return self.words
 
 
@@ -125,7 +125,7 @@ class AI:
     # 2. [System, Words, Assistant, ConvertToJson]
     # returns the 4 ai responses
     def get_initial_guesses(
-        self, words: List[str], relevant_attempt: AttemptResult
+        self, words: Set[str], relevant_attempt: AttemptResult
     ) -> List[AIResponse]:
         initial_message = getUserWordMessage(words, relevant_attempt)
         self.messages = [STARTING_MESSAGE, initial_message]
@@ -143,7 +143,7 @@ class AI:
     # 1. [System, Words (? 3away), Assistant, Correction]
     # 2. [System, Words (? 3away), Assistant, Correction, Assistant, ConvertToJson]
     def get_modified_guess(
-        self, words: List[str], relevant_attempt: AttemptResult
+        self, words: Set[str], relevant_attempt: AttemptResult
     ) -> List[AIResponse]:
         correction_message = getCorrectionAttemptMessage(relevant_attempt)
         self.messages.append(correction_message)

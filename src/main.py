@@ -13,7 +13,7 @@ from player import Player
 load_dotenv()
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 
-GAME_ID = 146
+GAME_ID = 147
 
 # Choose Chrome Browser
 browser = webdriver.Chrome()

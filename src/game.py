@@ -1,6 +1,6 @@
 from connections import Connections
 from game_state import GameState, AttemptResult, AttemptResultStatus
-from typing import List
+from typing import Set
 
 
 class Game:
@@ -9,7 +9,7 @@ class Game:
         initial_words = self.connections.get_remaining_words()
         self.game_state = GameState(game_id, initial_words)
 
-    def attempt_group(self, words: List[str]) -> AttemptResult:
+    def attempt_group(self, words: Set[str]) -> AttemptResult:
         result = self.connections.attempt_group(words)
         attempt_result = self.game_state.record_attempt(words, result)
         if attempt_result.result == AttemptResultStatus.SUCCESS:

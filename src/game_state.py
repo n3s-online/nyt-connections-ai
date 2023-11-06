@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Set
 from enum import Enum
 
 ALLOWED_MISTAKES = 3
@@ -17,7 +17,7 @@ class AttemptResultStatus(Enum):
 
 
 class AttemptResult:
-    def __init__(self, words: List[str], result: AttemptResultStatus):
+    def __init__(self, words: Set[str], result: AttemptResultStatus):
         self.words = words
         self.result = result
 
@@ -29,13 +29,13 @@ class AttemptResult:
 
 
 class GameState:
-    def __init__(self, game_id: int, initial_words: List[str]):
+    def __init__(self, game_id: int, initial_words: Set[str]):
         self.game_id = game_id
-        self.remaining_words: List[str] = initial_words
+        self.remaining_words: Set[str] = initial_words
         self.group_attempt_history: List[AttemptResult] = []
 
     def record_attempt(
-        self, attempt_words: List[str], result: AttemptResultStatus
+        self, attempt_words: Set[str], result: AttemptResultStatus
     ) -> AttemptResult:
         attempt = AttemptResult(attempt_words, result)
         self.group_attempt_history.append(attempt)
@@ -51,10 +51,10 @@ class GameState:
             return GameStatus.WON
         return GameStatus.IN_PROGRESS
 
-    def get_remaining_words(self) -> List[str]:
+    def get_remaining_words(self) -> Set[str]:
         return self.remaining_words
 
-    def update_remaining_words(self, words: List[str]):
+    def update_remaining_words(self, words: Set[str]):
         self.remaining_words = words
 
     def is_game_over(self) -> bool:
@@ -78,7 +78,7 @@ class GameState:
             return False
         return self.group_attempt_history[-1].result == AttemptResultStatus.FAILURE
 
-    def get_previous_attempt_for_words(self, words: List[str]) -> AttemptResult:
+    def get_previous_attempt_for_words(self, words: Set[str]) -> AttemptResult:
         for attempt in self.group_attempt_history:
             if self.__does_guess_match_attempt(words, attempt):
                 return attempt
@@ -102,7 +102,7 @@ class GameState:
         relevant_attempts = list(
             filter(
                 lambda attempt: attempt.result == valid_status
-                and all(word in self.remaining_words for word in attempt.words),
+                and attempt.words.issubset(self.remaining_words),
                 self.group_attempt_history,
             )
         )
@@ -112,11 +112,9 @@ class GameState:
 
     # TODO - change to helper function instead of inside of class (doesnt need access to state)
     def __does_guess_match_attempt(
-        self, group: List[str], attempt: AttemptResult
+        self, group: Set[str], attempt: AttemptResult
     ) -> bool:
-        if all(word in attempt.words for word in group):
-            return True
-        return False
+        return group.issubset(attempt.words)
 
     def __str__(self) -> str:
         attempt_history_string = (

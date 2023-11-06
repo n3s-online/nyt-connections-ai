@@ -2,7 +2,7 @@ from connections import Connections
 from game_state import GameState, AttemptResult
 from game import Game
 from ai import AI, AIResponse
-from typing import List
+from typing import List, Set
 
 
 class Player:
@@ -22,7 +22,7 @@ class Player:
         result = self.game.attempt_group(guess)
         print(result.pretty_str(), "\n\n")
 
-    def __get_guess(self) -> List[str]:
+    def __get_guess(self) -> Set[str]:
         remaining_words = self.game.get_game_state().get_remaining_words()
         if len(remaining_words) == 4:
             print("==Logic (4 words remaining)==")

@@ -2,7 +2,7 @@ from selenium.webdriver.remote.webdriver import WebDriver
 from selenium.webdriver.remote.webelement import WebElement
 from selenium.webdriver.common.by import By
 import time
-from typing import List, Dict
+from typing import Dict, Set
 from game_state import AttemptResultStatus
 
 URL_PREFIX = "https://connections.swellgarfo.com/nyt/"
@@ -48,14 +48,14 @@ class Connections:
         waitAfterClick()
         self.__load_buttons()
 
-    def get_remaining_words(self) -> List[str]:
+    def get_remaining_words(self) -> Set[str]:
         buttons = self.browser.find_elements(By.CSS_SELECTOR, "button")
 
-        remaining_words = []
+        remaining_words = set()
         for button in buttons:
             if not isButtonWordForGame(button):
                 continue
-            remaining_words.append(button.text)
+            remaining_words.add(button.text)
             self.words_to_button_elements[button.text] = button
         return remaining_words
 
@@ -66,7 +66,7 @@ class Connections:
         # return number of children of correct_div
         return len(correct_div.find_elements(By.XPATH, "./*"))
 
-    def attempt_group(self, words: List[str]) -> AttemptResultStatus:
+    def attempt_group(self, words: Set[str]) -> AttemptResultStatus:
         if len(words) != 4:
             raise ValueError("Must have 4 words in a group")
         current_number_of_correct_groups = self.get_number_of_correct_groups()
