@@ -1,22 +1,30 @@
-from typing import List, Set
+"""Class for representing the state of a game of Connections."""
+
 from enum import Enum
+from typing import List, Set, Union
 
 ALLOWED_MISTAKES = 3
 
 
 class GameStatus(Enum):
+    """Enum for representing the status of a game."""
+
     IN_PROGRESS = 1
     WON = 2
     LOST = 3
 
 
 class AttemptResultStatus(Enum):
+    """Enum for representing the status of a group attempt."""
+
     SUCCESS = 1
     FAILURE = 2
     ONE_AWAY = 3
 
 
 class AttemptResult:
+    """Class for representing the result of a group attempt."""
+
     def __init__(self, words: Set[str], result: AttemptResultStatus):
         self.words = words
         self.result = result
@@ -25,10 +33,13 @@ class AttemptResult:
         return f"GroupAttempt(words={self.words}, result={self.result})"
 
     def pretty_str(self):
+        """Return a pretty string representation of the attempt."""
         return f"{self.result}: {str(self.words)}"
 
 
 class GameState:
+    """Class for representing the state of a game of Connections."""
+
     def __init__(self, game_id: int, initial_words: Set[str]):
         self.game_id = game_id
         self.remaining_words: Set[str] = initial_words
@@ -37,11 +48,13 @@ class GameState:
     def record_attempt(
         self, attempt_words: Set[str], result: AttemptResultStatus
     ) -> AttemptResult:
+        """Record an attempt to group the given words."""
         attempt = AttemptResult(attempt_words, result)
         self.group_attempt_history.append(attempt)
         return attempt
 
     def get_game_status(self) -> GameStatus:
+        """Return the status of the game."""
         correct_groups = self.__get_number_of_correct_groups()
         number_of_attempts = self.__get_number_of_attempts()
         mistakes = number_of_attempts - correct_groups
@@ -52,15 +65,21 @@ class GameState:
         return GameStatus.IN_PROGRESS
 
     def get_remaining_words(self) -> Set[str]:
+        """Return the remaining words in the game."""
         return self.remaining_words
 
     def update_remaining_words(self, words: Set[str]):
+        """Update the remaining words in the game."""
         self.remaining_words = words
 
     def is_game_over(self) -> bool:
+        """Returns if the game is over."""
         return self.get_game_status() != GameStatus.IN_PROGRESS
 
+    # TODO I keep too many helper functions in this class. they should be moved to a utilty file
+
     def get_game_over_message(self) -> str:
+        """Return a summary message for the game being over."""
         game_status = self.get_game_status()
         number_of_attempts = self.__get_number_of_attempts()
         mistakes = self.__number_of_mistakes()
@@ -71,50 +90,14 @@ class GameState:
         return game_summary
 
     def get_turn_number(self) -> int:
+        """Return the number of the current turn."""
         return len(self.group_attempt_history) + 1
 
     def was_previous_attempt_failure(self) -> int:
+        """Return if the previous attempt was a failure."""
         if len(self.group_attempt_history) == 0:
             return False
         return self.group_attempt_history[-1].result == AttemptResultStatus.FAILURE
-
-    def get_previous_attempt_for_words(self, words: Set[str]) -> AttemptResult:
-        for attempt in self.group_attempt_history:
-            if self.__does_guess_match_attempt(words, attempt):
-                return attempt
-        return None
-
-    def get_most_recent_attempt_where_all_words_still_remain(
-        self,
-    ) -> AttemptResult:
-        attempt = self.__get_most_recent_attempt_where_all_words_still_remain(
-            AttemptResultStatus.ONE_AWAY
-        )
-        if attempt != None:
-            return attempt
-        return self.__get_most_recent_attempt_where_all_words_still_remain(
-            AttemptResultStatus.FAILURE
-        )
-
-    def __get_most_recent_attempt_where_all_words_still_remain(
-        self, valid_status: AttemptResultStatus
-    ) -> AttemptResult:
-        relevant_attempts = list(
-            filter(
-                lambda attempt: attempt.result == valid_status
-                and attempt.words.issubset(self.remaining_words),
-                self.group_attempt_history,
-            )
-        )
-        if len(relevant_attempts) == 0:
-            return None
-        return relevant_attempts[-1]
-
-    # TODO - change to helper function instead of inside of class (doesnt need access to state)
-    def __does_guess_match_attempt(
-        self, group: Set[str], attempt: AttemptResult
-    ) -> bool:
-        return group.issubset(attempt.words)
 
     def __str__(self) -> str:
         attempt_history_string = (

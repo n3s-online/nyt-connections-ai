@@ -1,38 +1,15 @@
-import datetime
-from game_state import AttemptResult, AttemptResultStatus
-import openai
+"""This module contains the AI class which is responsible for 
+communicating with the OpenAI API and parsing the response."""
+
 import json
 from typing import List, Set
-
-# MODEL_TO_USE = "gpt-3.5-turbo"
-MODEL_TO_USE = "gpt-4"
-
-
-def getLogFileName() -> str:
-    timestamp = datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
-    return f"logs/{timestamp}.txt"
-
-
-def logMessages(messages: List[dict]):
-    log_file_name = getLogFileName()
-    with open(log_file_name, "w") as log_file:
-        for message in messages:
-            # replace every "\n" with "\n\t" in the message content
-            content = message["content"].replace("\n", "\n\t")
-            log_file.write(f"{message['role']}:\n\t{content}\n")
-        log_file.write("\n")
-
-
-def getSystemMessage(message: str) -> dict:
-    return {"role": "system", "content": f"{message}"}
-
-
-def getAssistantMessage(message: str) -> dict:
-    return {"role": "assistant", "content": f"{message}"}
-
-
-def getUserMessage(message: str) -> dict:
-    return {"role": "user", "content": f"{message}"}
+from openai_wrapper import (
+    OpenAIMessageFactory,
+    OpenAIMessage,
+    OpenAIChat,
+    OpenAIChatBuilder,
+)
+from game_state import GameState
 
 
 SYSTEM_MESSAGE_BASE = """You are playing a game. You will be provided with a group of words. There are several groups of 4 words each that share a common theme / category. List each group of 4 words with their associated theme in order of confidence.
@@ -51,119 +28,90 @@ Each word can only be in one grouping, and each grouping must have 4 words exact
 The user may also give information about previous attempted groups.
 Order does not matter, for example, if the user has already attempted the group "A, B, C, D", Do not provide a guess of "D, C, B, A" or any other combination of the same 4 words.
 """
-STARTING_MESSAGE = getSystemMessage(SYSTEM_MESSAGE_BASE)
 
-CONVERT_TO_JSON_MESSAGE_BASE = """
+
+def get_system_message_content(remaining_words: Set[str]) -> str:
+    """Get the content of the system message."""
+    number_of_groups_to_provide = len(remaining_words) // 4
+    message = SYSTEM_MESSAGE_BASE
+    message += f"\nProvide {number_of_groups_to_provide} groups of 4 words each."
+    return message
+
+
+def get_system_message(game_state: GameState) -> OpenAIMessage:
+    """Get the system message."""
+    message = get_system_message_content(game_state.get_remaining_words())
+    return OpenAIMessageFactory.get_system_message(message)
+
+
+def get_initial_user_message_content(remaining_words: Set[str]) -> str:
+    """Get the content of the initial user message."""
+    message = json.dumps(list(remaining_words))
+    return message
+
+
+def get_initial_user_message(game_state: GameState) -> OpenAIMessage:
+    """Get the initial user message."""
+    message = get_initial_user_message_content(game_state.get_remaining_words())
+    return OpenAIMessageFactory.get_user_message(message)
+
+
+CONVERT_TO_JSON_MESSAGE_CONTENT = """
 Convert your response to a JSON string which is an array where each element in the array has a words array, and a theme array. Every group must have 4 words.
 If I were to type this in typescript it'd be `{words: string[]; theme: string;}[]`.
 """
-CONVERT_TO_JSON_MESSAGE = getSystemMessage(CONVERT_TO_JSON_MESSAGE_BASE)
+CONVERT_TO_JSON_MESSAGE = OpenAIMessageFactory.get_system_message(
+    CONVERT_TO_JSON_MESSAGE_CONTENT
+)
 
 
-def getUserWordMessage(words: Set[str], relevant_attempt: AttemptResult) -> dict:
-    message = json.dumps(list(words))
-    number_of_groups_to_provide = len(words) // 4
-    message += f"\nProvide {number_of_groups_to_provide} groups of 4 words each."
-    if relevant_attempt != None:
-        message += f"\n{summarizeAttempt(relevant_attempt)}"
-    return getUserMessage(message)
+class AIGuess:
+    """Class for representing a guess from the AI."""
 
-
-def getCorrectionAttemptMessage(attempt: AttemptResult) -> dict:
-    message = f"Correction: {summarizeAttempt(attempt)})"
-    return getUserMessage(message)
-
-
-def summarizeAttempt(attempt: AttemptResult) -> str:
-    words_string = str(list(attempt.words))
-    message = ""
-    if attempt.result == AttemptResultStatus.FAILURE:
-        message = f"You know that {words_string} is not a valid grouping. Try to find a different category."
-    elif attempt.result == AttemptResultStatus.ONE_AWAY:
-        message = f"You know that {words_string} is not a valid grouping, 3 of the 4 words are in the same category. Identify which other word from the input belongs in this category. Identify which word does not belong in this category. Swap the word that does not belong with the new word."
-    else:
-        raise Exception("Attempt was successful, no need to correct")
-    return (
-        message
-        + " As a reminder, the output must be groups of 4 words each, every word being unique and from the original input."
-    )
-
-
-def getResponse(messages: List[dict]) -> str:
-    response = openai.ChatCompletion.create(
-        model=MODEL_TO_USE,
-        messages=messages,
-        temperature=1,
-        max_tokens=256,
-        top_p=1,
-        frequency_penalty=0,
-        presence_penalty=0,
-    )
-    response_content = response["choices"][0]["message"]["content"]
-    return response_content
-
-
-class AIResponse:
-    def __init__(self, obj):
-        self.words: Set[str] = {word.upper() for word in obj["words"]}
-        self.theme: str = obj["theme"]
+    def __init__(self, words: Set[str], theme: str):
+        self.words = {word.upper() for word in words}
+        self.theme = theme
 
     def __str__(self):
-        return f"{self.theme}: {self.words}"
+        return f"{self.theme}: {str(list(self.words))}"
 
     def get_words(self) -> Set[str]:
+        """Return the words in the guess."""
         return self.words
 
 
 class AI:
-    def __init__(self, open_api_key):
-        self.open_api_key = open_api_key
-        openai.api_key = open_api_key
+    """Class for representing the AI."""
 
-    # messages:
-    # 1. [System, Words]
-    # 2. [System, Words, Assistant, ConvertToJson]
-    # returns the 4 ai responses
-    def get_initial_guesses(
-        self, words: Set[str], relevant_attempt: AttemptResult
-    ) -> List[AIResponse]:
-        initial_message = getUserWordMessage(words, relevant_attempt)
-        self.messages = [STARTING_MESSAGE, initial_message]
-        assistant_response = getResponse(self.messages)
-        self.messages.append(getAssistantMessage(assistant_response))
-        messages_with_json = self.messages + [CONVERT_TO_JSON_MESSAGE]
-        assistant_json_response = getResponse(messages_with_json)
-        logMessages(
-            self.messages
-            + [CONVERT_TO_JSON_MESSAGE, getAssistantMessage(assistant_json_response)]
+    def __init__(self, game_state: GameState):
+        self.game_state = game_state
+
+    def __convert_to_json_and_parse(
+        self, chat_builder_input: OpenAIChatBuilder
+    ) -> List[AIGuess]:
+        """Add on the JSON system message, get assistant response, and parse it."""
+        chat_builder = OpenAIChatBuilder(chat_builder_input).with_message(
+            CONVERT_TO_JSON_MESSAGE
         )
-        return parseJson(assistant_json_response)
+        chat = OpenAIChat(chat_builder)
+        assistant_response = chat.get_response()
+        json_string = assistant_response.get_content()
+        json_object = json.loads(json_string)
+        guesses: List[AIGuess] = []
+        for group in json_object:
+            words = set(group["words"])
+            theme = group["theme"]
+            guesses.append(AIGuess(words, theme))
+        return guesses
 
-    # messages:
-    # 1. [System, Words (? 3away), Assistant, Correction]
-    # 2. [System, Words (? 3away), Assistant, Correction, Assistant, ConvertToJson]
-    def get_modified_guess(
-        self, words: Set[str], relevant_attempt: AttemptResult
-    ) -> List[AIResponse]:
-        correction_message = getCorrectionAttemptMessage(relevant_attempt)
-        self.messages.append(correction_message)
-        assistant_response = getResponse(self.messages)
-        self.messages.append(getAssistantMessage(assistant_response))
-        messages_with_json = self.messages + [CONVERT_TO_JSON_MESSAGE]
-        assistant_json_response = getResponse(messages_with_json)
-        logMessages(
-            self.messages
-            + [CONVERT_TO_JSON_MESSAGE, getAssistantMessage(assistant_json_response)]
-        )
-        return parseJson(assistant_json_response)
-
-
-def parseJson(assistant_json_response: str) -> List[AIResponse]:
-    # try to json.loads, but catch error and print assistant_json-response if JSONDecodeError happens
-    try:
-        json_response = json.loads(assistant_json_response)
-        return [AIResponse(obj) for obj in json_response]
-    except json.decoder.JSONDecodeError:
-        print("Error parsing JSON")
-        print(assistant_json_response)
-        raise json.decoder.JSONDecodeError
+    def get_initial_guesses(self) -> List[AIGuess]:
+        """Get the initial guesses from the AI."""
+        system_message = get_system_message(self.game_state)
+        user_message = get_initial_user_message(self.game_state)
+        chat_builder = OpenAIChatBuilder()
+        chat_builder = chat_builder.with_message(system_message)
+        chat_builder = chat_builder.with_message(user_message)
+        chat = OpenAIChat(chat_builder)
+        assistant_response = chat.get_response()
+        chat_builder = chat_builder.with_message(assistant_response)
+        return self.__convert_to_json_and_parse(chat_builder)
