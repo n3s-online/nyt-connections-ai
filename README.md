@@ -11,3 +11,4 @@
 # TODOs
 
 - Try randomizing the order of the input words each attempt as it seems the AI is generating groups based on order of input words
+- Set up debugger
