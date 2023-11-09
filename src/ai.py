@@ -57,8 +57,8 @@ def get_initial_user_message(game_state: GameState) -> OpenAIMessage:
 
 
 CONVERT_TO_JSON_MESSAGE_CONTENT = """
-Convert your response to a JSON string which is an array where each element in the array has a words array, and a theme array. Every group must have 4 words.
-If I were to type this in typescript it'd be `{words: string[]; theme: string;}[]`.
+Convert your response to JSON where the response has an array of objects, each of which have a words string array, and a theme string. Every group must have 4 words.
+If I were to type the JSON in typescript it'd be `{groups: {words: string[]; theme: string;}[];}`.
 """
 CONVERT_TO_JSON_MESSAGE = OpenAIMessageFactory.get_system_message(
     CONVERT_TO_JSON_MESSAGE_CONTENT
@@ -94,11 +94,11 @@ class AI:
             CONVERT_TO_JSON_MESSAGE
         )
         chat = OpenAIChat(chat_builder)
-        assistant_response = chat.get_response()
+        assistant_response = chat.get_json_response()
         json_string = assistant_response.get_content()
         json_object = json.loads(json_string)
         guesses: List[AIGuess] = []
-        for group in json_object:
+        for group in json_object["groups"]:
             words = set(group["words"])
             theme = group["theme"]
             guesses.append(AIGuess(words, theme))
