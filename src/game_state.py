@@ -1,40 +1,10 @@
 """Class for representing the state of a game of Connections."""
 
-from enum import Enum
-from typing import List, Set, Union
+from typing import List, Set
+from game_types.game_types import AttemptResult, AttemptResultStatus, GameStatus
+from utils.attempt_utils import get_number_of_correct_groups
 
 ALLOWED_MISTAKES = 3
-
-
-class GameStatus(Enum):
-    """Enum for representing the status of a game."""
-
-    IN_PROGRESS = 1
-    WON = 2
-    LOST = 3
-
-
-class AttemptResultStatus(Enum):
-    """Enum for representing the status of a group attempt."""
-
-    SUCCESS = 1
-    FAILURE = 2
-    ONE_AWAY = 3
-
-
-class AttemptResult:
-    """Class for representing the result of a group attempt."""
-
-    def __init__(self, words: Set[str], result: AttemptResultStatus):
-        self.words = words
-        self.result = result
-
-    def __str__(self):
-        return f"GroupAttempt(words={self.words}, result={self.result})"
-
-    def pretty_str(self):
-        """Return a pretty string representation of the attempt."""
-        return f"{self.result}: {str(self.words)}"
 
 
 class GameState:
@@ -55,8 +25,8 @@ class GameState:
 
     def get_game_status(self) -> GameStatus:
         """Return the status of the game."""
-        correct_groups = self.__get_number_of_correct_groups()
-        number_of_attempts = self.__get_number_of_attempts()
+        correct_groups = get_number_of_correct_groups(self.group_attempt_history)
+        number_of_attempts = len(self.group_attempt_history)
         mistakes = number_of_attempts - correct_groups
         if mistakes > ALLOWED_MISTAKES:
             return GameStatus.LOST
@@ -76,28 +46,17 @@ class GameState:
         """Returns if the game is over."""
         return self.get_game_status() != GameStatus.IN_PROGRESS
 
-    # TODO I keep too many helper functions in this class. they should be moved to a utilty file
-
-    def get_game_over_message(self) -> str:
-        """Return a summary message for the game being over."""
-        game_status = self.get_game_status()
-        number_of_attempts = self.__get_number_of_attempts()
-        mistakes = self.__number_of_mistakes()
-        correct_groups = self.__get_number_of_correct_groups()
-        game_summary = f"Game {self.game_id} over! {game_status.name} in {number_of_attempts} attempts with {mistakes} mistakes and {correct_groups} correct groups."
-        for i, attempt in enumerate(self.group_attempt_history):
-            game_summary += f"\n\t{i+1}. {attempt.pretty_str()}"
-        return game_summary
-
     def get_turn_number(self) -> int:
         """Return the number of the current turn."""
         return len(self.group_attempt_history) + 1
 
-    def was_previous_attempt_failure(self) -> int:
-        """Return if the previous attempt was a failure."""
-        if len(self.group_attempt_history) == 0:
-            return False
-        return self.group_attempt_history[-1].result == AttemptResultStatus.FAILURE
+    def get_attempts(self) -> List[AttemptResult]:
+        """Return the list of attempts."""
+        return self.group_attempt_history
+
+    def get_game_id(self) -> int:
+        """Return the game id."""
+        return self.game_id
 
     def __str__(self) -> str:
         attempt_history_string = (
@@ -106,16 +65,3 @@ class GameState:
         for i, attempt in enumerate(self.group_attempt_history):
             attempt_history_string += f"\n\t{i+1}. {attempt.pretty_str()}"
         return f"==Game State==\nStatus: {self.get_game_status()}\nRemaining Words: {self.remaining_words}{attempt_history_string}"
-
-    def __get_number_of_correct_groups(self) -> int:
-        correct_attempt_results = filter(
-            lambda attempt: attempt.result == AttemptResultStatus.SUCCESS,
-            self.group_attempt_history,
-        )
-        return len(list(correct_attempt_results))
-
-    def __get_number_of_attempts(self) -> int:
-        return len(self.group_attempt_history)
-
-    def __number_of_mistakes(self) -> int:
-        return self.__get_number_of_attempts() - self.__get_number_of_correct_groups()

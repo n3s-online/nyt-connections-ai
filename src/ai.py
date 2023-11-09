@@ -3,7 +3,7 @@ communicating with the OpenAI API and parsing the response."""
 
 import json
 from typing import List, Set
-from openai_wrapper import (
+from utils.openai_wrapper import (
     OpenAIMessageFactory,
     OpenAIMessage,
     OpenAIChat,

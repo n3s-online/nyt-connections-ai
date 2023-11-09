@@ -4,6 +4,7 @@ from typing import List, Set
 from connections import Connections
 from game import Game
 from ai import AI, AIGuess
+from utils.attempt_utils import get_game_over_message, was_most_recent_attempt_a_failure
 
 
 class Player:
@@ -13,7 +14,7 @@ class Player:
 
     def play_turn(self):
         print(f"====Player turn {self.game.get_game_state().get_turn_number()}====")
-        if self.game.get_game_state().was_previous_attempt_failure():
+        if was_most_recent_attempt_a_failure(self.game.get_game_state().get_attempts()):
             print("==Shuffling==")
             self.game.shuffle()
         print(self.game.get_game_state())
@@ -33,6 +34,12 @@ class Player:
         return ai_guess.get_words()
 
     def play_game(self):
-        while not self.game.get_game_state().is_game_over():
+        game_state = self.game.get_game_state()
+        while not game_state.is_game_over():
             self.play_turn()
-        print(self.game.get_game_state().get_game_over_message())
+        game_over_message = get_game_over_message(
+            game_state.get_game_id(),
+            game_state.get_attempts(),
+            game_state.get_game_status(),
+        )
+        print(game_over_message)
