@@ -3,7 +3,7 @@ communicating with the OpenAI API and parsing the response."""
 
 import json
 from typing import List, Set
-from prompts.prompts import SYSTEM_MESSAGE_BASE_V2
+from prompts.prompts import SYSTEM_MESSAGE_BASE_V1
 from utils.openai_wrapper import (
     OpenAIMessageFactory,
     OpenAIMessage,
@@ -16,7 +16,7 @@ from game_state import GameState
 def get_system_message_content(remaining_words: Set[str]) -> str:
     """Get the content of the system message."""
     number_of_groups_to_provide = len(remaining_words) // 4
-    message = SYSTEM_MESSAGE_BASE_V2
+    message = SYSTEM_MESSAGE_BASE_V1
     message += f"\nProvide {number_of_groups_to_provide} groups of 4 words each."
     return message
 
