@@ -14,6 +14,7 @@ class GameState:
         self.game_id = game_id
         self.remaining_words: Set[str] = initial_words
         self.group_attempt_history: List[AttemptResult] = []
+        self.player_quit: bool = False
 
     def record_attempt(
         self, attempt_words: Set[str], result: AttemptResultStatus
@@ -23,12 +24,16 @@ class GameState:
         self.group_attempt_history.append(attempt)
         return attempt
 
+    def quit(self):
+        print("Quitting game")
+        self.player_quit = True
+
     def get_game_status(self) -> GameStatus:
         """Return the status of the game."""
         correct_groups = get_number_of_correct_groups(self.group_attempt_history)
         number_of_attempts = len(self.group_attempt_history)
         mistakes = number_of_attempts - correct_groups
-        if mistakes > ALLOWED_MISTAKES:
+        if mistakes > ALLOWED_MISTAKES or self.player_quit:
             return GameStatus.LOST
         elif correct_groups == 4:
             return GameStatus.WON

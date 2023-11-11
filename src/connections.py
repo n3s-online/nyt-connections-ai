@@ -69,11 +69,14 @@ class Connections:
     def attempt_group(self, words: Set[str]) -> AttemptResultStatus:
         """Attempt to group the given words."""
         if len(words) != 4:
-            raise ValueError("Must have 4 words in a group")
+            return AttemptResultStatus.FAILURE
         current_number_of_correct_groups = self.get_number_of_correct_groups()
         for word in words:
+            if word not in self.words_to_button_elements:
+                return AttemptResultStatus.FAILURE
             word_button = self.words_to_button_elements[word]
             word_button.click()
+            del self.words_to_button_elements[word]
             wait_after_click()
         self.submit_button.click()
         wait_after_click()

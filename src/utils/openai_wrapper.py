@@ -83,15 +83,17 @@ class ResponseFormat(Enum):
     TEXT = "text"
 
 
-MODEL_TO_USE = "gpt-4-1106-preview"
+JSON_MODEL_TO_USE = "gpt-4-1106-preview"
 
 
 def getOpenAiResponse(
-    messages: List[OpenAIMessage], response_format: ResponseFormat
+    messages: List[OpenAIMessage],
+    response_format: ResponseFormat,
+    model: str = JSON_MODEL_TO_USE,
 ) -> OpenAIMessage:
     """Get a response from OpenAI's API."""
     response = openai.ChatCompletion.create(
-        model=MODEL_TO_USE,
+        model=model,
         messages=[message.get_as_dict() for message in messages],
         temperature=1,
         max_tokens=256,
@@ -115,9 +117,9 @@ class OpenAIChat:
         else:
             self.messages = messages_or_builder
 
-    def get_response(self) -> OpenAIMessage:
+    def get_response(self, model: str) -> OpenAIMessage:
         """Get a response from OpenAI's API."""
-        return getOpenAiResponse(self.messages, ResponseFormat.TEXT)
+        return getOpenAiResponse(self.messages, ResponseFormat.TEXT, model)
 
     def get_json_response(self) -> OpenAIMessage:
         """Get a JSON response from OpenAI's API."""

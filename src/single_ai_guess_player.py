@@ -1,13 +1,14 @@
-""" Player class for playing a game of Connections. """
+""" Player which attempts a single AI guess for playing a game of Connections """
 
 from typing import List, Set
 from connections import Connections
 from game import Game
 from ai import AI, AIGuess
-from utils.attempt_utils import get_game_over_message
+from results_tracker import GameResult
+from utils.attempt_utils import get_game_over_message, get_number_of_correct_groups
 
 
-class Player:
+class SingleAiGuessPlayer:
     def __init__(self, game_id: int, connections: Connections, model: str):
         self.game = Game(game_id, connections)
         self.model = model
@@ -20,17 +21,23 @@ class Player:
         print("==Connections Result==")
         result = self.game.attempt_group(guess)
         print(result.pretty_str(), "\n\n")
+        if len(self.ai_guesses) == 0 and not self.game.get_game_state().is_game_over():
+            self.game.get_game_state().quit()
 
     def __get_guess(self) -> Set[str]:
-        ai = AI(self.game.get_game_state(), self.model)
         print("==AI guess==")
-        ai_guesses: List[AIGuess] = ai.get_initial_guesses()
-        for guess in ai_guesses:
+        if not hasattr(self, "ai_guesses"):
+            ai = AI(self.game.get_game_state(), self.model)
+            self.ai_guesses: List[AIGuess] = ai.get_initial_guesses()
+
+        for guess in self.ai_guesses:
             print(guess)
-        ai_guess = ai_guesses[0]
+        ai_guess = self.ai_guesses[0]
+        self.ai_guesses = self.ai_guesses[1:]
+
         return ai_guess.get_words()
 
-    def play_game(self):
+    def play_game(self) -> GameResult:
         game_state = self.game.get_game_state()
         while not game_state.is_game_over():
             self.play_turn()
@@ -40,3 +47,8 @@ class Player:
             game_state.get_game_status(),
         )
         print(game_over_message)
+        return GameResult(
+            game_state.get_game_id(),
+            get_number_of_correct_groups(game_state.get_attempts()),
+            len(game_state.get_attempts()),
+        )

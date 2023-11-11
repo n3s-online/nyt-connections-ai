@@ -83,8 +83,9 @@ class AIGuess:
 class AI:
     """Class for representing the AI."""
 
-    def __init__(self, game_state: GameState):
+    def __init__(self, game_state: GameState, model: str):
         self.game_state = game_state
+        self.model = model
 
     def __convert_to_json_and_parse(
         self, chat_builder_input: OpenAIChatBuilder
@@ -112,6 +113,6 @@ class AI:
         chat_builder = chat_builder.with_message(system_message)
         chat_builder = chat_builder.with_message(user_message)
         chat = OpenAIChat(chat_builder)
-        assistant_response = chat.get_response()
+        assistant_response = chat.get_response(self.model)
         chat_builder = chat_builder.with_message(assistant_response)
         return self.__convert_to_json_and_parse(chat_builder)
