@@ -3,6 +3,7 @@ communicating with the OpenAI API and parsing the response."""
 
 import json
 from typing import List, Set
+from prompts.prompts import SYSTEM_MESSAGE_BASE_V2
 from utils.openai_wrapper import (
     OpenAIMessageFactory,
     OpenAIMessage,
@@ -12,28 +13,10 @@ from utils.openai_wrapper import (
 from game_state import GameState
 
 
-SYSTEM_MESSAGE_BASE = """You are playing a game. You will be provided with a group of words. There are several groups of 4 words each that share a common theme / category. List each group of 4 words with their associated theme in order of confidence.
-
-Examples of groupings:
-- Fish: Bass, Flounder, Salmon, Trout
-- Fire _: Ant, Drill, Island, Opal
-- Fruit Homophones: Lyme, Mellon, Pair, Plumb
-- Publications: Journal, Globe, Post, Asteroid
-- Synonyms For Falsehood: Fib, Fiction, Lie, Tale
-- Candy Pieces: Dot, Goober, Kiss, Whopper
-- Rappers Minus Numbers: Cent, Chainz, Pac, Savage
-- Touchscreen Gestures: Pinch, Spread, Swipe, Tap
-
-Each word can only be in one grouping, and each grouping must have 4 words exactly. The grouping cannot have a theme like "Random words", "General terms" or "Unrelated words", they must be connected in some way. 
-The user may also give information about previous attempted groups.
-Order does not matter, for example, if the user has already attempted the group "A, B, C, D", Do not provide a guess of "D, C, B, A" or any other combination of the same 4 words.
-"""
-
-
 def get_system_message_content(remaining_words: Set[str]) -> str:
     """Get the content of the system message."""
     number_of_groups_to_provide = len(remaining_words) // 4
-    message = SYSTEM_MESSAGE_BASE
+    message = SYSTEM_MESSAGE_BASE_V2
     message += f"\nProvide {number_of_groups_to_provide} groups of 4 words each."
     return message
 
