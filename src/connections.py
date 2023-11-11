@@ -34,7 +34,6 @@ class Connections:
             self.words_to_button_elements[button.text] = button
         self.submit_button = get_button_with_text(self.browser, "Submit")
         self.clear_button = get_button_with_text(self.browser, "Clear")
-        self.shuffle_button = get_button_with_text(self.browser, "Shuffle")
         self.toastify = get_div_with_class_substring(self.browser, "Toastify")
 
     def __is_one_away_message_visible(self):
@@ -46,12 +45,6 @@ class Connections:
         while len(self.toastify.find_elements(By.XPATH, "./*")) > 0:
             time.sleep(0.5)
         return True
-
-    def shuffle(self):
-        """Click shuffle button."""
-        self.shuffle_button.click()
-        wait_after_click()
-        self.__load_buttons()
 
     def get_remaining_words(self) -> Set[str]:
         """Parse the webpage to get the remaining words in the game."""

@@ -36,10 +36,3 @@ def get_game_over_message(
     for i, attempt in enumerate(attempts):
         game_summary += f"\n\t{i+1}. {attempt.pretty_str()}"
     return game_summary
-
-
-def was_most_recent_attempt_a_failure(attempts: List[AttemptResult]) -> bool:
-    """Return if the most recent attempt was a failure."""
-    if len(attempts) == 0:
-        return False
-    return attempts[-1].result != AttemptResultStatus.SUCCESS
