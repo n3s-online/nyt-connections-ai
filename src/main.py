@@ -19,7 +19,7 @@ OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 if OPENAI_API_KEY is None:
     raise Exception("OPENAI_API_KEY environment variable not set.")
 openai.api_key = OPENAI_API_KEY
-MODEL_TO_USE = "gpt-4-1106-preview"
+MODEL_TO_USE = "gpt-4"
 
 
 # Choose Chrome Browser
@@ -29,7 +29,7 @@ GAME_IDS = range(58, 153)
 
 
 def run_game(game_id: int):
-    result_tracker = ResultsTracker("level_one")
+    result_tracker = ResultsTracker("level_two")
     if result_tracker.already_has_result(game_id):
         print(f"Game {game_id} already has result. Skipping.")
         return

@@ -6,7 +6,7 @@ import csv
 from os import listdir
 from os.path import isfile, join
 
-folder = "output/level_one"
+folder = "output/level_two"
 outfile = "output/combined.csv"
 game_ids = sorted(
     [int(f.split(".csv")[0]) for f in listdir(folder) if isfile(join(folder, f))]
