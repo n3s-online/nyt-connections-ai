@@ -8,9 +8,8 @@ from utils.attempt_utils import get_game_over_message
 
 
 class Player:
-    def __init__(self, game_id: int, connections: Connections, open_api_key: str):
+    def __init__(self, game_id: int, connections: Connections):
         self.game = Game(game_id, connections)
-        self.open_api_key = open_api_key
 
     def play_turn(self):
         print(f"====Player turn {self.game.get_game_state().get_turn_number()}====")

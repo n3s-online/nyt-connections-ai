@@ -25,7 +25,7 @@ browser = webdriver.Chrome()
 connections = Connections(browser, GAME_ID)
 
 # Create a new player
-player = Player(GAME_ID, connections, OPENAI_API_KEY)
+player = Player(GAME_ID, connections)
 player.play_game()
 
 # Wait for 10 seconds
